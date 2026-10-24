@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Margonem — Privejtozaur Rex i Irianogarbaróg
 // @namespace    local.privejtozaur
-// @version      3.1.2
+// @version      3.1.3
 // @description  Terrozaur: sam Rex. Neferkar Set: Irianogarbaróg na wężu. Chaegd Agnrakh: postać w szarej koszulce. Mapa i walka.
 // @match        https://*.margonem.pl/*
 // @match        https://*.margonem.com/*
@@ -174,13 +174,16 @@
  function styleElement(el,a){
   if(!el||!a||el.tagName==='CANVAS')return;
   if(!styled.has(el)){
-   const names=['background-image','background-size','background-position','background-repeat','object-fit','object-position'];
+   const names=['background-image','background-size','background-position','background-repeat','object-fit','object-position','max-width','max-height'];
    styled.set(el,{values:names.map(n=>[n,el.style.getPropertyValue(n),el.style.getPropertyPriority(n)]),
     src:el.tagName==='IMG'?el.getAttribute('src'):undefined,srcset:el.tagName==='IMG'?el.getAttribute('srcset'):undefined});
   }
   if(el.tagName==='IMG'){
    if(el.getAttribute('src')!==a.data){el.removeAttribute('srcset');el.setAttribute('src',a.data);}
    el.style.setProperty('object-fit','contain','important');el.style.setProperty('object-position','center bottom','important');
+   if(el.closest?.('.tipInnerContainer')){
+    el.style.setProperty('max-width','160px','important');el.style.setProperty('max-height','180px','important');
+   }
   }else{
    const bg=`url("${a.data}")`;if(el.style.getPropertyValue('background-image')!==bg)el.style.setProperty('background-image',bg,'important');
    el.style.setProperty('background-size','contain','important');el.style.setProperty('background-position','center bottom','important');el.style.setProperty('background-repeat','no-repeat','important');
@@ -204,13 +207,22 @@
   }
  }
  function inspectDom(){
-  const root=document.querySelector('#battle')||document.querySelector('.battle-window');if(!root)return;
-  for(const el of root.querySelectorAll('img, [style*="background"]')){
+  // Minimap tips are appended outside the battle window; inspect DOM images too.
+  for(const el of document.querySelectorAll('img, #battle [style*="background"], .battle-window [style*="background"]')){
    const src=el.tagName==='IMG'?el.getAttribute('src'):'';
    const bg=el.style.getPropertyValue('background-image');
    const a=match(src)||match(bg?.match(/url\(["']?(.*?)["']?\)/)?.[1]);if(a)styleElement(el,a);
   }
  }
+ let domRefreshQueued=false;
+ const imageObserver=window.MutationObserver?new MutationObserver(records=>{
+  if(!enabled||stopped||domRefreshQueued)return;
+  const changed=records.some(r=>r.type==='attributes'&&r.target.tagName==='IMG'||
+   [...(r.addedNodes||[])].some(n=>n.tagName==='IMG'||n.querySelector?.('img')));
+  if(!changed)return;
+  domRefreshQueued=true;queueMicrotask(()=>{domRefreshQueued=false;if(enabled&&!stopped)safe(inspectDom);});
+ }):null;
+ imageObserver?.observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['src','srcset']});
  function hook(owner,name){
   if(!owner||typeof owner[name]!=='function'||hooks.some(h=>h.owner===owner&&h.name===name))return;
   const original=owner[name];const wrapper=function(...args){
@@ -230,9 +242,9 @@
   }catch(e){lastError=String(e.message||e);}
  }
  window.PrivejtozaurRex=Object.freeze({
-  status:()=>({version:'3.1.2',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
+  status:()=>({version:'3.1.3',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
   setEnabled(v){enabled=!!v;if(!enabled){restore();canvasTargets.clear();}else scan();},
-  destroy(){stopped=true;enabled=false;clearInterval(timer);restore();for(const h of hooks)if(h.owner[h.name]===h.wrapper)h.owner[h.name]=h.original;
+  destroy(){stopped=true;enabled=false;imageObserver?.disconnect();clearInterval(timer);restore();for(const h of hooks)if(h.owner[h.name]===h.wrapper)h.owner[h.name]=h.original;
    for(const [npc,h]of drawHooks)if(npc[h.name]===h.wrapper){if(h.own)npc[h.name]=h.original;else delete npc[h.name];}
    drawHooks.clear();fittedFrames.clear();canvasTargets.clear();battleTargets.clear();
    for(const restoreTransport of transportRestores)restoreTransport();encodedTargets.clear();objectUrls.clear();
