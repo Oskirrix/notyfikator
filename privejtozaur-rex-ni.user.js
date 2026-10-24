@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Margonem — Privejtozaur Rex i Irianogarbaróg
 // @namespace    local.privejtozaur
-// @version      3.1.4
+// @version      3.1.5
 // @description  Terrozaur: sam Rex. Neferkar Set: Irianogarbaróg na wężu. Chaegd Agnrakh: Ciutek z większym nosem. Pogardliwa Sybilla: karykatura. Mapa i walka.
 // @match        https://*.margonem.pl/*
 // @match        https://*.margonem.com/*
@@ -21,8 +21,8 @@
  const assets = [
   {name:'Terrozaur', names:['terrozaur'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/privejtozaur-rex-krzywe-zeby-v2.png'},
   {name:'Neferkar Set', names:['neferkar set','nefrekar set'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/irianogarbarog-neferkar-set.png'},
-  {name:'Chaegd Agnrakh', names:['chaegd agnrakh','chaegd anrakh'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/ciutek-wiekszy-nos-56x64.png'},
-  {name:'Pogardliwa Sybilla', names:['pogardliwa sybilla'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/sybilla-karykatura-56x64.png'}
+  {name:'Chaegd Agnrakh', names:['chaegd agnrakh','chaegd anrakh'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/ciutek-hq.png'},
+  {name:'Pogardliwa Sybilla', names:['pogardliwa sybilla'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/sybilla-hq.png'}
  ];
  let enabled=true, stopped=false, found=0, battleFound=0, replacements=0, lastError='';
  const icons=new Map(), styled=new Map(), hooks=[], battleTargets=new Map(), canvasTargets=new Map(), drawHooks=new Map();
@@ -121,6 +121,7 @@
   if(fittedFrames.has(key))return fittedFrames.get(key);
   const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
   const ctx=canvas.getContext('2d');if(!ctx)return null;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   const scale=Math.min(w/asset.image.naturalWidth,h/asset.image.naturalHeight);
   const dw=asset.image.naturalWidth*scale,dh=asset.image.naturalHeight*scale;
   nativeDraw.call(ctx,asset.image,(w-dw)/2,h-dh,dw,dh);
@@ -243,7 +244,7 @@
   }catch(e){lastError=String(e.message||e);}
  }
  window.PrivejtozaurRex=Object.freeze({
-  status:()=>({version:'3.1.4',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
+  status:()=>({version:'3.1.5',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
   setEnabled(v){enabled=!!v;if(!enabled){restore();canvasTargets.clear();}else scan();},
   destroy(){stopped=true;enabled=false;imageObserver?.disconnect();clearInterval(timer);restore();for(const h of hooks)if(h.owner[h.name]===h.wrapper)h.owner[h.name]=h.original;
    for(const [npc,h]of drawHooks)if(npc[h.name]===h.wrapper){if(h.own)npc[h.name]=h.original;else delete npc[h.name];}
