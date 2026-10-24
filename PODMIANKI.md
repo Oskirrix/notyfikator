@@ -27,6 +27,7 @@ Przy zmianie istniejącego obrazka najlepiej użyj nowej nazwy pliku (np. `nowy-
 
 - Terrozaur → Privejtozaur Rex z poprawionymi zębami.
 - Neferkar Set → Irianogarbaróg na wężu.
+- Chaegd Agnrakh → postać w szarej koszulce i okularach.
 
 Podmiana jest lokalna dla osoby z zainstalowanym dodatkiem. Testy SI oraz rysowania NI przeszły; działania w zalogowanej sesji gry nie zweryfikowano.
 
