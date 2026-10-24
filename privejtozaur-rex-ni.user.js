@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Margonem — Privejtozaur Rex i Irianogarbaróg
 // @namespace    local.privejtozaur
-// @version      3.1.6
+// @version      3.1.7
 // @description  Terrozaur: sam Rex. Neferkar Set: Irianogarbaróg na wężu. Chaegd Agnrakh: postać w szarej koszulce. Ciutek: postać z większym nosem. Pogardliwa Sybilla: karykatura. Mapa i walka.
 // @match        https://*.margonem.pl/*
 // @match        https://*.margonem.com/*
@@ -80,7 +80,11 @@
   const setter=function(value){
    const a=enabled&&match(value);
    if(a){sourceTargets.set(this,a);networkStats.images++;}else sourceTargets.delete(this);
-   return srcDescriptor.set.call(this,value);
+   // Tooltip images are ordinary DOM images, not animation sheets.
+   // Redirect before the browser displays/reloads the original resource.
+   const target=a&&this.closest?.('.tipInnerContainer, .tip, [role="tooltip"]')?a.data:value;
+   if(srcDescriptor.get?.call(this)===String(target))return;
+   return srcDescriptor.set.call(this,target);
   };
   Object.defineProperty(imageProto,'src',{...srcDescriptor,set:setter});
   transportRestores.push(()=>{if(Object.getOwnPropertyDescriptor(imageProto,'src')?.set===setter)Object.defineProperty(imageProto,'src',srcDescriptor);});
@@ -223,7 +227,7 @@
   const changed=records.some(r=>r.type==='attributes'&&r.target.tagName==='IMG'||
    [...(r.addedNodes||[])].some(n=>n.tagName==='IMG'||n.querySelector?.('img')));
   if(!changed)return;
-  domRefreshQueued=true;queueMicrotask(()=>{domRefreshQueued=false;if(enabled&&!stopped)safe(inspectDom);});
+  domRefreshQueued=true;try{safe(inspectDom);}finally{domRefreshQueued=false;}
  }):null;
  imageObserver?.observe(document,{subtree:true,childList:true,attributes:true,attributeFilter:['src','srcset']});
  function hook(owner,name){
@@ -245,7 +249,7 @@
   }catch(e){lastError=String(e.message||e);}
  }
  window.PrivejtozaurRex=Object.freeze({
-  status:()=>({version:'3.1.6',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
+  status:()=>({version:'3.1.7',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
   setEnabled(v){enabled=!!v;if(!enabled){restore();canvasTargets.clear();}else scan();},
   destroy(){stopped=true;enabled=false;imageObserver?.disconnect();clearInterval(timer);restore();for(const h of hooks)if(h.owner[h.name]===h.wrapper)h.owner[h.name]=h.original;
    for(const [npc,h]of drawHooks)if(npc[h.name]===h.wrapper){if(h.own)npc[h.name]=h.original;else delete npc[h.name];}
