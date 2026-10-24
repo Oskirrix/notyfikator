@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Margonem — Privejtozaur Rex i Irianogarbaróg
 // @namespace    local.privejtozaur
-// @version      3.1.1
+// @version      3.1.2
 // @description  Terrozaur: sam Rex. Neferkar Set: Irianogarbaróg na wężu. Chaegd Agnrakh: postać w szarej koszulce. Mapa i walka.
 // @match        https://*.margonem.pl/*
 // @match        https://*.margonem.com/*
@@ -21,7 +21,7 @@
  const assets = [
   {name:'Terrozaur', names:['terrozaur'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/privejtozaur-rex-krzywe-zeby-v2.png'},
   {name:'Neferkar Set', names:['neferkar set','nefrekar set'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/irianogarbarog-neferkar-set.png'},
-  {name:'Chaegd Agnrakh', names:['chaegd agnrakh','chaegd anrakh'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/chaegd-agnrakh-podmianka.png'}
+  {name:'Chaegd Agnrakh', names:['chaegd agnrakh','chaegd anrakh'], data:'https://raw.githubusercontent.com/Oskirrix/notyfikator/main/exec-07ed5958-c814-43ae-b97b-a5558eeaed72.png'}
  ];
  let enabled=true, stopped=false, found=0, battleFound=0, replacements=0, lastError='';
  const icons=new Map(), styled=new Map(), hooks=[], battleTargets=new Map(), canvasTargets=new Map(), drawHooks=new Map();
@@ -230,7 +230,7 @@
   }catch(e){lastError=String(e.message||e);}
  }
  window.PrivejtozaurRex=Object.freeze({
-  status:()=>({version:'3.1.1',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
+  status:()=>({version:'3.1.2',enabled,interface:window.Engine?'NI':'SI / oczekiwanie',found,battleFound,replacements,network:{...networkStats},niMapHooks:[...drawHooks.values()].filter(h=>!h.battle).length,niBattleHooks:[...drawHooks.values()].filter(h=>h.battle).length,images:assets.map(a=>({name:a.name,ready:!!a.image.naturalWidth})),icons:[...icons.keys()],lastError}),
   setEnabled(v){enabled=!!v;if(!enabled){restore();canvasTargets.clear();}else scan();},
   destroy(){stopped=true;enabled=false;clearInterval(timer);restore();for(const h of hooks)if(h.owner[h.name]===h.wrapper)h.owner[h.name]=h.original;
    for(const [npc,h]of drawHooks)if(npc[h.name]===h.wrapper){if(h.own)npc[h.name]=h.original;else delete npc[h.name];}
